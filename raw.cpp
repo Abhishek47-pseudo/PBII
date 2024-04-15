@@ -104,7 +104,7 @@ public:
             bool isDuplicate = false;
             for (const auto &row : csvData)
             {
-                if (row.size() >= 3 && row[1] == Name && row[2] == Address && row[3] == AadhaarID)
+                if ((row.size() >= 3 && row[1] == Name && row[2] == Address) || row[3] == AadhaarID) 
                 {
                     isDuplicate = true;
                     break;

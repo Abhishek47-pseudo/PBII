@@ -1,0 +1,39 @@
+class Electricity : public Citizen {
+    int consumption;
+    int charges_per_unit;
+    string supplier;
+    int total_bill;
+    int paid_bill;
+    int remaining_bill;
+
+public:
+    Electricity(const string &b, const string &c, const string &d, int consumption, int charges_per_unit, const string &supplier)
+        : Citizen(b, c, d), consumption(consumption), charges_per_unit(charges_per_unit), supplier(supplier) {
+            total_bill = consumption * charges_per_unit;
+            paid_bill = 0;
+            remaining_bill = total_bill;
+    }
+
+    // Method to display electricity bill details
+    void displayBillDetails() {
+        cout << "Name: " << Name << endl;
+        cout << "Address: " << Address << endl;
+        cout << "Electricity Consumption: " << consumption << " units" << endl;
+        cout << "Charges per Unit: " << charges_per_unit << " Rs" << endl;
+        cout << "Supplier: " << supplier << endl;
+        cout << "Total Bill: " << total_bill << " Rs" << endl;
+        cout << "Paid Bill: " << paid_bill << " Rs" << endl;
+        cout << "Remaining Bill: " << remaining_bill << " Rs" << endl;
+    }
+
+    // Method to make payment towards electricity bill
+    void makePayment(int amount) {
+        if (amount <= remaining_bill) {
+            paid_bill += amount;
+            remaining_bill -= amount;
+            cout << "Payment of " << amount << " Rs made successfully." << endl;
+        } else {
+            cout << "Error: Payment exceeds remaining bill amount." << endl;
+        }
+    }
+};

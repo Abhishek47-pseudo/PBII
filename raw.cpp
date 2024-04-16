@@ -455,6 +455,7 @@ public:
             if (row.size() >= 2 && row[1] == companyName) // Check if company name matches
             {
                 companyCid = row[0]; // Get the Cid from the row
+                cout<<companyCid<<endl;
                 foundCompanyCid = true;
                 break;
             }
@@ -467,7 +468,7 @@ public:
         }
 
         // Read the charges data for the specified company CID
-        vector<vector<string>> chargesData = readCSV("Charges.csv");
+        vector<vector<string>> chargesData = readCSV("Electricity_Charges.csv");
         double rate = 0.0;
         for (const auto &row : chargesData)
         {
@@ -630,7 +631,7 @@ int main()
                     electricityService.RegisterElectricityData();
 
                     double rate = 0.15;
-                    double totalCharges = electricityService.CalculateTotalCharges(to_string(rate));
+                    double totalCharges = electricityService.CalculateTotalCharges(uid_in);
                     cout << "Total charges: " << totalCharges << " Rupees" << endl;
                     break;
                 }

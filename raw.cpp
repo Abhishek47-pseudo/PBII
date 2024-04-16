@@ -466,24 +466,29 @@ public:
             return 0.0;
         }
 
-        // Read Electricity_Charges.csv to get the rate associated with the Cid
-        vector<vector<string>> chargesData = readCSV(companyCid + "_Charges.csv");
+        // Read the charges data for the specified company CID
+        vector<vector<string>> chargesData = readCSV("Charges.csv");
         double rate = 0.0;
-        if (!chargesData.empty() && chargesData[0].size() >= 2)
+        for (const auto &row : chargesData)
         {
-            try
+            if (row.size() >= 2 && row[0] == companyCid)
             {
-                rate = stod(chargesData[0][1]); // Get the rate from the first row
-            }
-            catch (const std::exception &ex)
-            {
-                cerr << "Error converting rate to double: " << ex.what() << endl;
-                return 0.0;
+                try
+                {
+                    rate = stod(row[1]); // Get the rate from the row
+                    break;               // Exit loop after finding the rate
+                }
+                catch (const std::exception &ex)
+                {
+                    cerr << "Error converting rate to double: " << ex.what() << endl;
+                    return 0.0;
+                }
             }
         }
-        else
+
+        if (rate == 0.0)
         {
-            cerr << "Error: Electricity charges data not found for company CID: " << companyCid << endl;
+            cerr << "Error: Rate not found for company CID: " << companyCid << endl;
             return 0.0;
         }
 

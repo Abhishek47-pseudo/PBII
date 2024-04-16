@@ -356,9 +356,9 @@ public:
     void RegisterElectricityData()
     {
         // Calculate total charges based on usage
-        double rate = 0.15;                              // Rate per kWh
-        double totalUsage = CalculateTotalCharges(to_string(rate)); // Function to calculate total usage from CSV
-        double totalCharges = totalUsage * rate;
+        // double rate = 0.15;                                         // Rate per kWh
+        double totalCharges = CalculateTotalCharges(Uid); // Function to calculate total usage from CSV
+        // double totalCharges = totalUsage * rate;
 
         // Read paid charges and calculate pending charges
         double paidCharges = 0 /* Function to read paid charges from CSV */;
@@ -368,7 +368,7 @@ public:
         ofstream outFile("Electricity_Data.csv", ios::app);
         if (outFile.is_open())
         {
-            outFile << Uid << "," << totalUsage << "," << totalCharges << "," << paidCharges << "," << pendingCharges << endl;
+            outFile << Uid << "," << totalCharges << "," << totalCharges << "," << paidCharges << "," << pendingCharges << endl;
             outFile.close();
             cout << "Electricity data registered for UID: " << Uid << endl;
         }
@@ -427,59 +427,96 @@ public:
         {
             if (row.size() >= 1 && row[0] == Uid) // Check if Uid matches
             {
-                companyName = row[4]; // Get the company name from the row
+                if (row.size() >= 5)
+                {
+                    companyName = row[4]; // Get the company name from the row
+                }
+                else
+                {
+                    cerr << "Error: Incomplete data for UID " << Uid << endl;
+                    return 0.0;
+                }
                 break;
             }
+        }
+
+        if (companyName.empty())
+        {
+            cerr << "Error: Company name not found for UID " << Uid << endl;
+            return 0.0;
         }
 
         // Read Company_Profiles.csv to get the Cid associated with the company name
         vector<vector<string>> companyData = readCSV("Company_Profiles.csv");
         string companyCid;
+        bool foundCompanyCid = false;
         for (const auto &row : companyData)
         {
             if (row.size() >= 2 && row[1] == companyName) // Check if company name matches
             {
                 companyCid = row[0]; // Get the Cid from the row
+                foundCompanyCid = true;
                 break;
             }
         }
 
+        if (!foundCompanyCid)
+        {
+            cerr << "Error: Company CID not found for company name: " << companyName << endl;
+            return 0.0;
+        }
+
         // Read Electricity_Charges.csv to get the rate associated with the Cid
         vector<vector<string>> chargesData = readCSV(companyCid + "_Charges.csv");
-        double rate;
+        double rate = 0.0;
         if (!chargesData.empty() && chargesData[0].size() >= 2)
         {
-            rate = stod(chargesData[0][1]); // Get the rate from the first row
+            try
+            {
+                rate = stod(chargesData[0][1]); // Get the rate from the first row
+            }
+            catch (const std::exception &ex)
+            {
+                cerr << "Error converting rate to double: " << ex.what() << endl;
+                return 0.0;
+            }
         }
         else
         {
-            cerr << "Unable to find electricity charges for the company!" << endl;
-            return 0.0; // Return 0 if no charges found
+            cerr << "Error: Electricity charges data not found for company CID: " << companyCid << endl;
+            return 0.0;
         }
 
         // Read usage data from CSV file
         ifstream inFile("electricityusages/" + Uid + "_usage.csv");
-        if (inFile.is_open())
+        if (!inFile.is_open())
         {
-            string line;
-            // Skip header line
-            getline(inFile, line);
-            while (getline(inFile, line))
+            cerr << "Error: Unable to open usage file for UID: " << Uid << endl;
+            return 0.0;
+        }
+
+        // Skip header line
+        string line;
+        getline(inFile, line);
+        while (getline(inFile, line))
+        {
+            stringstream ss(line);
+            string hour_str, usage_str;
+            getline(ss, hour_str, ',');
+            getline(ss, usage_str, ',');
+            try
             {
-                stringstream ss(line);
-                string hour_str, usage_str;
-                getline(ss, hour_str, ',');
-                getline(ss, usage_str, ',');
                 double usage = stod(usage_str);
                 totalUsage += usage;
             }
-            inFile.close();
+            catch (const std::exception &ex)
+            {
+                cerr << "Error converting usage to double: " << ex.what() << endl;
+                inFile.close();
+                return 0.0;
+            }
         }
-        else
-        {
-            cerr << "Unable to open file for reading." << endl;
-            return 0.0; // Return 0 if unable to open file
-        }
+        inFile.close();
 
         totalCharges = totalUsage * rate;
 
